@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Digital Museum 🏛️
 
-## Getting Started
+Was sitting doing absolutely nothing.
 
-First, run the development server:
+Thought, "why not build a museum?"
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+So... here we are.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Built with Next.js, GSAP, Tailwind CSS and a slightly unhealthy
+relationship with animations.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+AI helped with some of the coding too. And then I spent a suspicious amount of time fixing the things
+that AI confidently told me would work.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## The goal
 
-## Learn More
+Mostly experimentation.
 
-To learn more about Next.js, take a look at the following resources:
+I wanted to play around with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- scroll-based storytelling
+- GSAP animations
+- immersive transitions
+- interactive artifacts
+- cinematic UI
+- atmosphere and micro-interactions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+That's pretty much it. 😭
