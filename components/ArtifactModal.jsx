@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
+
 import gsap from 'gsap';
 
 export default function ArtifactModal({
@@ -21,6 +22,8 @@ export default function ArtifactModal({
   const scanLineRef = useRef(null);
   const hudRef = useRef(null);
   const metadataRef = useRef(null);
+
+  const audioRef = useRef(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -130,9 +133,10 @@ export default function ArtifactModal({
     });
 
     /*
-     * Start the temporary image at the exact
+     * Start temporary image at the exact
      * position of the gallery card.
      */
+
     gsap.set(flyingImage, {
       position: 'fixed',
 
@@ -224,8 +228,7 @@ export default function ArtifactModal({
 
         ease: 'expo.inOut',
 
-        filter:
-          'brightness(1.08) contrast(1.08)',
+        filter: 'brightness(1.08) contrast(1.08)',
       },
       '-=0.3'
     );
@@ -274,7 +277,7 @@ export default function ArtifactModal({
     );
 
     /*
-     * 7. Scan the artifact.
+     * 7. Scan artifact.
      */
 
     timeline.to(
@@ -334,6 +337,85 @@ export default function ArtifactModal({
 
   /*
    * -------------------------------------------------------
+   * AUDIO
+   * -------------------------------------------------------
+   *
+   * Real audio file:
+   * public/sounds/monsoon.mp3
+   */
+
+  const toggleSoundbite = async () => {
+    try {
+      /*
+       * PAUSE
+       */
+
+      if (isPlayingAudio) {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+
+        setIsPlayingAudio(false);
+        return;
+      }
+
+      /*
+       * CREATE AUDIO INSTANCE
+       */
+
+      if (!audioRef.current) {
+        const audio = new Audio('/sounds/monsoon.mp3');
+
+        audio.preload = 'auto';
+        audio.loop = true;
+        audio.volume = 0.65;
+
+        audio.addEventListener('ended', () => {
+          setIsPlayingAudio(false);
+        });
+
+        audio.addEventListener('error', () => {
+          console.error(
+            'Unable to load artifact audio. Check that public/sounds/monsoon.mp3 exists.'
+          );
+
+          setIsPlayingAudio(false);
+        });
+
+        audioRef.current = audio;
+      }
+
+      /*
+       * PLAY
+       */
+
+      await audioRef.current.play();
+
+      setIsPlayingAudio(true);
+    } catch (error) {
+      console.error('Unable to play artifact audio:', error);
+      setIsPlayingAudio(false);
+    }
+  };
+
+  /*
+   * -------------------------------------------------------
+   * AUDIO CLEANUP
+   * -------------------------------------------------------
+   */
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  /*
+   * -------------------------------------------------------
    * CINEMATIC CLOSE
    * -------------------------------------------------------
    */
@@ -341,6 +423,17 @@ export default function ArtifactModal({
   const handleClose = () => {
     if (isClosing) return;
 
+    /*
+     * Stop audio immediately when leaving the modal.
+     */
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+
+    setIsPlayingAudio(false);
     setIsClosing(true);
 
     const modal = modalRef.current;
@@ -446,16 +539,6 @@ export default function ArtifactModal({
 
   /*
    * -------------------------------------------------------
-   * AUDIO
-   * -------------------------------------------------------
-   */
-
-  const toggleSoundbite = () => {
-    setIsPlayingAudio((previous) => !previous);
-  };
-
-  /*
-   * -------------------------------------------------------
    * UI
    * -------------------------------------------------------
    */
@@ -478,7 +561,10 @@ export default function ArtifactModal({
       "
     >
 
-      {/* Flying image used for the cinematic transition */}
+      {/* =================================================
+          FLYING IMAGE
+          Used only during cinematic transition
+      ================================================== */}
 
       <img
         ref={flyingImageRef}
@@ -494,7 +580,9 @@ export default function ArtifactModal({
         "
       />
 
-      {/* Main modal */}
+      {/* =================================================
+          MAIN MODAL
+      ================================================== */}
 
       <div
         ref={panelRef}
@@ -534,7 +622,7 @@ export default function ArtifactModal({
 
         {/* =================================================
             CLOSE
-            ================================================= */}
+        ================================================== */}
 
         <button
           type="button"
@@ -624,8 +712,8 @@ export default function ArtifactModal({
         </button>
 
         {/* =================================================
-            LEFT SIDE
-            ================================================= */}
+            LEFT SIDE — ARTIFACT
+        ================================================== */}
 
         <div
           ref={stageRef}
@@ -661,7 +749,9 @@ export default function ArtifactModal({
           "
         >
 
-          {/* Grid */}
+          {/* =================================================
+              GRID
+          ================================================== */}
 
           <div
             className="
@@ -676,49 +766,82 @@ export default function ArtifactModal({
             "
           />
 
-          {/* Vignette */}
+          {/* =================================================
+              VIGNETTE
+          ================================================== */}
 
           <div
             className="
               absolute
               inset-0
               z-10
+
               pointer-events-none
 
               bg-[radial-gradient(circle_at_center,transparent_25%,rgba(0,0,0,0.5)_100%)]
             "
           />
 
-          {/* Inspector label */}
+          {/* =================================================
+              VISITOR-FACING INSTRUCTION
+          ================================================== */}
 
           <div
             className="
               absolute
-              top-4
-              left-4
+              top-6
+              left-6
               z-40
 
               pointer-events-none
 
-              font-mono
-              text-[10px]
+              rounded-md
+              border
+              border-yellow-500/20
 
-              uppercase
-              tracking-widest
+              bg-black/40
 
-              text-yellow-500/60
+              px-3
+              py-2
+
+              backdrop-blur-sm
             "
           >
-            [3D_AXIS_INSPECTOR]
+            <div
+              className="
+                font-mono
+                text-[10px]
+                uppercase
+                tracking-[0.16em]
+                text-yellow-500
+              "
+            >
+              Interactive Artifact
+            </div>
+
+            <div
+              className="
+                mt-1
+                font-mono
+                text-[9px]
+                uppercase
+                tracking-[0.12em]
+                text-zinc-500
+              "
+            >
+              Drag to explore
+            </div>
           </div>
 
-          {/* Object ID */}
+          {/* =================================================
+              OBJECT NUMBER
+          ================================================== */}
 
           <div
             className="
               absolute
-              top-4
-              right-4
+              top-6
+              right-6
               z-40
 
               pointer-events-none
@@ -732,10 +855,12 @@ export default function ArtifactModal({
               text-zinc-700
             "
           >
-            OBJECT // 00{asset.id}
+            OBJECT / 00{asset.id}
           </div>
 
-          {/* HUD */}
+          {/* =================================================
+              HUD CORNERS
+          ================================================== */}
 
           <div
             ref={hudRef}
@@ -750,6 +875,8 @@ export default function ArtifactModal({
             "
           >
 
+            {/* Top left */}
+
             <div
               className="
                 absolute
@@ -764,6 +891,8 @@ export default function ArtifactModal({
                 border-yellow-500/50
               "
             />
+
+            {/* Top right */}
 
             <div
               className="
@@ -780,6 +909,8 @@ export default function ArtifactModal({
               "
             />
 
+            {/* Bottom left */}
+
             <div
               className="
                 absolute
@@ -794,6 +925,8 @@ export default function ArtifactModal({
                 border-yellow-500/50
               "
             />
+
+            {/* Bottom right */}
 
             <div
               className="
@@ -812,7 +945,9 @@ export default function ArtifactModal({
 
           </div>
 
-          {/* Scan line */}
+          {/* =================================================
+              SCAN LINE
+          ================================================== */}
 
           <div
             ref={scanLineRef}
@@ -838,7 +973,7 @@ export default function ArtifactModal({
 
           {/* =================================================
               ARTIFACT
-              ================================================= */}
+          ================================================== */}
 
           <div
             ref={artifactRef}
@@ -900,6 +1035,7 @@ export default function ArtifactModal({
                 className="
                   absolute
                   inset-0
+
                   pointer-events-none
 
                   bg-gradient-to-br
@@ -909,7 +1045,7 @@ export default function ArtifactModal({
                 "
               />
 
-              {/* Artifact label */}
+              {/* Bottom gradient */}
 
               <div
                 className="
@@ -928,18 +1064,33 @@ export default function ArtifactModal({
                 "
               >
 
-                <span
-                  className="
-                    font-mono
-                    text-xs
+                <div className="flex flex-col gap-1">
 
-                    tracking-wider
+                  <span
+                    className="
+                      font-mono
+                      text-[10px]
+                      uppercase
+                      tracking-[0.16em]
+                      text-yellow-400
+                    "
+                  >
+                    Drag to rotate
+                  </span>
 
-                    text-yellow-400
-                  "
-                >
-                  AXIS_Z // FRONT
-                </span>
+                  <span
+                    className="
+                      font-mono
+                      text-[9px]
+                      uppercase
+                      tracking-[0.12em]
+                      text-zinc-500
+                    "
+                  >
+                    Interactive 3D view
+                  </span>
+
+                </div>
 
               </div>
 
@@ -952,8 +1103,8 @@ export default function ArtifactModal({
           <div
             className="
               absolute
-              bottom-4
-              left-4
+              bottom-5
+              left-6
 
               pointer-events-none
 
@@ -961,19 +1112,19 @@ export default function ArtifactModal({
               text-[9px]
 
               uppercase
-              tracking-widest
+              tracking-[0.14em]
 
               text-zinc-700
             "
           >
-            DRAG OBJECT // ROTATION ENABLED
+            Drag the artifact to examine it
           </div>
 
         </div>
 
         {/* =================================================
-            RIGHT SIDE
-            ================================================= */}
+            RIGHT SIDE — INFORMATION
+        ================================================== */}
 
         <div
           className="
@@ -988,7 +1139,9 @@ export default function ArtifactModal({
           "
         >
 
-          {/* Metadata */}
+          {/* =================================================
+              METADATA
+          ================================================== */}
 
           <div ref={metadataRef}>
 
@@ -1042,16 +1195,19 @@ export default function ArtifactModal({
 
               {' '}
 
-              Detailed historical context reflects centuries of
-              localized tradition, material craftsmanship, and
-              structural evolution preserved across generations.
+              This artifact offers a glimpse into the
+              landscape, traditions, and cultural memory
+              represented by this exhibit.
             </p>
 
-            {/* Metadata grid */}
+            {/* =================================================
+                METADATA GRID
+            ================================================== */}
 
             <div
               className="
                 my-4
+
                 grid
                 grid-cols-2
                 gap-4
@@ -1073,6 +1229,7 @@ export default function ArtifactModal({
                   className="
                     mb-1
                     block
+
                     text-zinc-600
                   "
                 >
@@ -1091,6 +1248,7 @@ export default function ArtifactModal({
                   className="
                     mb-1
                     block
+
                     text-zinc-600
                   "
                 >
@@ -1105,7 +1263,9 @@ export default function ArtifactModal({
 
             </div>
 
-            {/* Verification */}
+            {/* =================================================
+                VISITOR STATUS
+            ================================================== */}
 
             <div
               className="
@@ -1113,13 +1273,13 @@ export default function ArtifactModal({
 
                 flex
                 items-center
-                gap-2
+                gap-3
 
                 font-mono
                 text-[10px]
 
                 uppercase
-                tracking-[0.2em]
+                tracking-[0.16em]
 
                 text-zinc-600
               "
@@ -1138,15 +1298,15 @@ export default function ArtifactModal({
                 "
               />
 
-              SYSTEM // OBJECT VERIFIED
+              Exhibition object ready to explore
 
             </div>
 
           </div>
 
           {/* =================================================
-              AUDIO
-              ================================================= */}
+              AUDIO PLAYER
+          ================================================== */}
 
           <div
             className="
@@ -1178,10 +1338,13 @@ export default function ArtifactModal({
               "
             >
 
+              {/* Status indicator */}
+
               <div
                 className={`
                   h-3
                   w-3
+
                   rounded-full
 
                   ${
@@ -1205,23 +1368,27 @@ export default function ArtifactModal({
                     text-white
                   "
                 >
-                  Curator Audio Commentary
+                  Ambient Soundscape
                 </h4>
 
                 <p
                   className="
+                    mt-1
+
                     font-mono
                     text-[10px]
 
                     text-zinc-500
                   "
                 >
-                  Duration: 0:45 min
+                  Rain and distant thunder
                 </p>
 
               </div>
 
             </div>
+
+            {/* Play button */}
 
             <button
               type="button"
@@ -1247,10 +1414,14 @@ export default function ArtifactModal({
                 hover:bg-yellow-400
                 hover:shadow-[0_0_20px_rgba(234,179,8,0.25)]
 
+                active:scale-95
+
                 cursor-pointer
               "
             >
-              {isPlayingAudio ? 'Pause' : 'Play Audio'}
+              {isPlayingAudio
+                ? 'Pause'
+                : 'Play Audio'}
             </button>
 
           </div>
@@ -1258,6 +1429,7 @@ export default function ArtifactModal({
         </div>
 
       </div>
+
     </div>
   );
 }
