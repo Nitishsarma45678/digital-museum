@@ -289,6 +289,7 @@ function ExhibitChapter({ asset, index }) {
   const spotlightRef = useRef(null);
 
   const progressRef = useRef(null);
+  const chapterProgressRef = useRef(0);
 
   const [activeHotspot, setActiveHotspot] = useState(null);
 
@@ -356,25 +357,26 @@ function ExhibitChapter({ asset, index }) {
 
         onUpdate: (self) => {
           const progress = self.progress;
+          chapterProgressRef.current = progress;
 
           /*
            * ======================================================
            * PHASES
            * ======================================================
            *
-           * 0.00 - 0.16
+           * 0.00 - 0.14
            * Artifact enters
            *
-           * 0.16 - 0.52
+           * 0.14 - 0.48
            * Artifact remains dominant
            *
-           * 0.52 - 0.74
+           * 0.48 - 0.68
            * World starts to reveal
            *
-           * 0.74 - 0.84
+           * 0.68 - 0.76
            * Artifact leaves completely
            *
-           * 0.84 - 1.00
+           * 0.76 - 1.00
            * FULL SCENERY
            *
            */
@@ -386,7 +388,7 @@ function ExhibitChapter({ asset, index }) {
            */
 
           const entryProgress = Math.min(
-            progress / 0.16,
+            progress / 0.14,
             1
           );
 
@@ -398,10 +400,10 @@ function ExhibitChapter({ asset, index }) {
 
           let revealProgress = 0;
 
-          if (progress > 0.52) {
+          if (progress > 0.48) {
             revealProgress =
-              (progress - 0.52) /
-              (0.74 - 0.52);
+              (progress - 0.48) /
+              (0.68 - 0.48);
           }
 
           revealProgress = Math.max(
@@ -417,10 +419,10 @@ function ExhibitChapter({ asset, index }) {
 
           let exitProgress = 0;
 
-          if (progress > 0.74) {
+          if (progress > 0.68) {
             exitProgress =
-              (progress - 0.74) /
-              (0.84 - 0.74);
+              (progress - 0.68) /
+              (0.76 - 0.68);
           }
 
           exitProgress = Math.max(
@@ -437,27 +439,27 @@ function ExhibitChapter({ asset, index }) {
           if (artifactRef.current) {
             let opacity = 1;
 
-            if (progress < 0.16) {
+            if (progress < 0.14) {
               opacity = entryProgress;
             }
 
-            if (progress >= 0.52) {
+            if (progress >= 0.48) {
               opacity =
                 1 -
                 revealProgress * 0.35;
             }
 
-            if (progress >= 0.74) {
+            if (progress >= 0.68) {
               opacity =
                 0.65 *
                 (1 - exitProgress);
             }
 
             /*
-             * At 84% the artifact is GUARANTEED gone.
+             * At 76% the artifact is GUARANTEED gone.
              */
 
-            if (progress >= 0.84) {
+            if (progress >= 0.76) {
               opacity = 0;
             }
 
@@ -527,12 +529,12 @@ function ExhibitChapter({ asset, index }) {
                 entryProgress;
             }
 
-            if (progress >= 0.52) {
+            if (progress >= 0.48) {
               opacity =
                 1 -
                 Math.min(
                   1,
-                  (progress - 0.52) / 0.18
+                  (progress - 0.48) / 0.16
                 );
             }
 
@@ -556,12 +558,12 @@ function ExhibitChapter({ asset, index }) {
           if (descriptionRef.current) {
             let opacity = 1;
 
-            if (progress >= 0.52) {
+            if (progress >= 0.48) {
               opacity =
                 1 -
                 Math.min(
                   1,
-                  (progress - 0.52) / 0.16
+                  (progress - 0.48) / 0.14
                 );
             }
 
@@ -662,12 +664,69 @@ function ExhibitChapter({ asset, index }) {
     };
   }, []);
 
+  /*
+   * -------------------------------------------------------
+   * SCROLL RESISTANCE DURING FULL SCENERY
+   * -------------------------------------------------------
+   *
+   * Once the artifact has disappeared, the visitor should
+   * have to deliberately scroll to leave the scene.
+   * Desktop wheel input is damped to about 22% while the
+   * chapter is in its full-scenery phase. This creates the
+   * slow, story-driven "hold" feeling without changing the
+   * animation itself.
+   *
+   * Touch scrolling on phones/tablets is left untouched.
+   */
+
+  useEffect(() => {
+    const chapter = chapterRef.current;
+
+    if (!chapter) return;
+
+    const handleWheel = (event) => {
+      // Keep native touch / small-screen scrolling natural.
+      if (window.innerWidth < 768) return;
+
+      const progress = chapterProgressRef.current;
+
+      // Only slow the scroll after the artifact is gone.
+      if (progress < 0.76) return;
+
+      const rect = chapter.getBoundingClientRect();
+
+      // Make sure this is the chapter currently occupying the viewport.
+      const isActiveChapter =
+        rect.top <= 2 &&
+        rect.bottom >= window.innerHeight - 2;
+
+      if (!isActiveChapter) return;
+
+      event.preventDefault();
+
+      // Strong resistance: roughly 22% of normal wheel travel.
+      window.scrollBy({
+        top: event.deltaY * 0.22,
+        left: 0,
+        behavior: 'auto',
+      });
+    };
+
+    window.addEventListener('wheel', handleWheel, {
+      passive: false,
+    });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
   return (
     <section
       ref={chapterRef}
       className="
         relative
-        h-[220vh]
+        h-[450vh]
         bg-[#010101]
       "
     >
