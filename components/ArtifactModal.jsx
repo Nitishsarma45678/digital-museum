@@ -9,6 +9,32 @@ import {
 
 import gsap from 'gsap';
 
+const ARTIFACT_AUDIO = {
+  1: {
+    file: '/sounds/riversound.mp3',
+    label: 'River ambience',
+  },
+  2: {
+    file: '/sounds/kaziranga.wav',
+    label: 'Kaziranga wilderness',
+  },
+  3: {
+    file: '/sounds/satriya.mp3',
+    label: 'Sattriya atmosphere',
+  },
+  4: null,
+  5: null,
+  6: {
+    file: '/sounds/moonsoonCanopies.wav',
+    label: 'Rain and distant thunder',
+  },
+  7: null,
+  8: {
+    file: '/sounds/Bihu.mp3',
+    label: 'Bihu festivities',
+  },
+};
+
 export default function ArtifactModal({
   asset,
   originRect,
@@ -339,12 +365,16 @@ export default function ArtifactModal({
    * -------------------------------------------------------
    * AUDIO
    * -------------------------------------------------------
-   *
-   * Real audio file:
-   * public/sounds/monsoon.mp3
+   * Each exhibit uses its own optional recording.
    */
 
+  const audioConfig = ARTIFACT_AUDIO[asset.id] ?? null;
+
   const toggleSoundbite = async () => {
+    if (!audioConfig?.file) {
+      return;
+    }
+
     try {
       /*
        * PAUSE
@@ -364,19 +394,15 @@ export default function ArtifactModal({
        */
 
       if (!audioRef.current) {
-        const audio = new Audio('/sounds/monsoon.mp3');
+        const audio = new Audio(audioConfig.file);
 
         audio.preload = 'auto';
         audio.loop = true;
         audio.volume = 0.65;
 
-        audio.addEventListener('ended', () => {
-          setIsPlayingAudio(false);
-        });
-
         audio.addEventListener('error', () => {
           console.error(
-            'Unable to load artifact audio. Check that public/sounds/monsoon.mp3 exists.'
+            `Unable to load artifact audio: ${audioConfig.file}`
           );
 
           setIsPlayingAudio(false);
@@ -1381,7 +1407,7 @@ export default function ArtifactModal({
                     text-zinc-500
                   "
                 >
-                  Rain and distant thunder
+                  {audioConfig?.label || 'No recording available'}
                 </p>
 
               </div>
@@ -1393,6 +1419,12 @@ export default function ArtifactModal({
             <button
               type="button"
               onClick={toggleSoundbite}
+              disabled={!audioConfig?.file}
+              aria-label={
+                audioConfig?.file
+                  ? `${isPlayingAudio ? 'Pause' : 'Play'} ${audioConfig.label}`
+                  : 'No recording available for this exhibit'
+              }
               className="
                 rounded-lg
 
@@ -1416,12 +1448,20 @@ export default function ArtifactModal({
 
                 active:scale-95
 
+                disabled:cursor-not-allowed
+                disabled:bg-zinc-800
+                disabled:text-zinc-600
+                disabled:hover:bg-zinc-800
+                disabled:hover:shadow-none
+
                 cursor-pointer
               "
             >
-              {isPlayingAudio
-                ? 'Pause'
-                : 'Play Audio'}
+              {audioConfig?.file
+                ? isPlayingAudio
+                  ? 'Pause'
+                  : 'Play Audio'
+                : 'Unavailable'}
             </button>
 
           </div>

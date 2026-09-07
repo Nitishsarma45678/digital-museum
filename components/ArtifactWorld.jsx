@@ -350,12 +350,32 @@ function ExhibitChapter({ asset, index }) {
 
     const ctx = gsap.context(() => {
       const trigger = ScrollTrigger.create({
-        trigger: chapter,
+  trigger: chapter,
 
-        start: 'top top',
-        end: 'bottom bottom',
+  start: 'top top',
+  end: 'bottom bottom',
 
-        onUpdate: (self) => {
+  onEnter: () => {
+    window.dispatchEvent(
+      new CustomEvent('museum-exhibit-change', {
+        detail: {
+          exhibitId: asset.id,
+        },
+      })
+    );
+  },
+
+  onEnterBack: () => {
+    window.dispatchEvent(
+      new CustomEvent('museum-exhibit-change', {
+        detail: {
+          exhibitId: asset.id,
+        },
+      })
+    );
+  },
+
+  onUpdate: (self) => {
           const progress = self.progress;
           chapterProgressRef.current = progress;
 
