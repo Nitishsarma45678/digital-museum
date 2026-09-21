@@ -148,8 +148,8 @@ export default function Home() {
         {/* ===================================================
             IMMERSIVE ARTIFACT WORLDS
 
-            8 artifacts
-            8 worlds
+            9 artifacts
+            9 worlds
             one continuous scroll journey
             =================================================== */}
 
@@ -374,8 +374,8 @@ export default function Home() {
                 text-zinc-400
               "
             >
-              Eight objects.
-              Eight stories.
+              Nine objects.
+              Nine stories.
               One living archive.
             </p>
 

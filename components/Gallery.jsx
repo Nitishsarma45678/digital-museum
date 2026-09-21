@@ -25,6 +25,8 @@ export default function Gallery() {
       if (!scrollRef.current || !sections.length) return;
 
       const totalWidth = scrollRef.current.offsetWidth;
+      const finalCardHold = window.innerWidth * 10;
+      const scrollDistance = totalWidth + finalCardHold;
 
       gsap.to(sections, {
         xPercent: -100 * (sections.length - 1),
@@ -34,7 +36,7 @@ export default function Gallery() {
           trigger: containerRef.current,
           pin: true,
           scrub: 1,
-          end: () => '+=' + totalWidth,
+          end: () => '+=' + scrollDistance,
         },
       });
 
@@ -47,7 +49,7 @@ export default function Gallery() {
           trigger: containerRef.current,
           scrub: 1,
           start: 'top top',
-          end: () => '+=' + totalWidth,
+          end: () => '+=' + scrollDistance,
         },
       });
     }, containerRef);

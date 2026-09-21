@@ -78,6 +78,14 @@ const WORLD_CONTENT = {
     description:
       'Music, movement, harvest and community become one pulse.',
   },
+
+  9: {
+    eyebrow: 'MUSIC // THE VOICE',
+    worldLabel: 'VOICE // IDENTITY',
+    prompt: 'LISTEN TO ASSAM',
+    description:
+      'For many in Assam, his songs are more than music—they are memory, pride, protest and belonging.',
+  },
 };
 
 /*
@@ -254,6 +262,27 @@ const HOTSPOTS = {
       y: 65,
     },
   ],
+
+  9: [
+    {
+      id: 'voice',
+      label: 'VOICE',
+      title: 'The Sound of Assam',
+      text:
+        'Zubeen Garg gave Assamese music a new modern voice while still carrying folk roots and emotional depth.',
+      x: 30,
+      y: 38,
+    },
+    {
+      id: 'identity',
+      label: 'IDENTITY',
+      title: 'Belonging',
+      text:
+        'His songs became a shared language of pride, grief, celebration, and cultural memory across Assam and beyond.',
+      x: 71,
+      y: 58,
+    },
+  ],
 };
 
 /*
@@ -265,14 +294,10 @@ const HOTSPOTS = {
 |
 */
 
-function ExhibitChapter({ asset, index }) {
+function ExhibitChapter({ asset }) {
   const chapterRef = useRef(null);
 
-  const sceneRef = useRef(null);
-
   const artifactRef = useRef(null);
-
-  const artifactImageRef = useRef(null);
 
   const worldRef = useRef(null);
 
@@ -682,7 +707,7 @@ function ExhibitChapter({ asset, index }) {
     return () => {
       ctx.revert();
     };
-  }, []);
+  }, [asset.id]);
 
   /*
    * -------------------------------------------------------
@@ -756,7 +781,6 @@ function ExhibitChapter({ asset, index }) {
           ======================================================== */}
 
       <div
-        ref={sceneRef}
         className="
           sticky
           top-0
@@ -861,10 +885,14 @@ function ExhibitChapter({ asset, index }) {
             className="
               absolute
 
-              left-[7vw]
-              top-[19vh]
+              left-6
+              top-[16vh]
 
-              max-w-3xl
+              max-w-[calc(100vw-3rem)]
+
+              md:left-[7vw]
+              md:top-[19vh]
+              md:max-w-3xl
 
               opacity-0
             "
@@ -889,7 +917,8 @@ function ExhibitChapter({ asset, index }) {
   className="
     mt-4
 
-    text-6xl
+    text-4xl
+    sm:text-6xl
     md:text-8xl
 
     font-black
@@ -919,10 +948,15 @@ function ExhibitChapter({ asset, index }) {
             className="
               absolute
 
-              left-[7vw]
-              top-[52vh]
+              left-6
+              right-6
+              top-[55vh]
 
               max-w-lg
+
+              md:left-[7vw]
+              md:right-auto
+              md:top-[52vh]
 
               opacity-0
             "
@@ -1180,7 +1214,9 @@ function ExhibitChapter({ asset, index }) {
 
             z-40
 
-            w-[min(44vw,430px)]
+            w-[min(78vw,430px)]
+
+            md:w-[min(44vw,430px)]
 
             -translate-x-1/2
             -translate-y-1/2
@@ -1207,14 +1243,14 @@ function ExhibitChapter({ asset, index }) {
           >
 
             <img
-              ref={artifactImageRef}
               src={asset.image}
               alt={asset.title}
               draggable="false"
               className="
                 block
 
-                h-[60vh]
+                h-[52vh]
+                md:h-[60vh]
                 w-full
 
                 object-cover
@@ -1287,6 +1323,8 @@ function ExhibitChapter({ asset, index }) {
                   md:text-3xl
 
                   font-black
+
+                  !text-white
 
                   tracking-tight
                 "
@@ -1636,11 +1674,10 @@ export default function ArtifactWorld() {
   return (
     <div className="relative z-30 bg-[#010101]">
 
-      {museumAssets.map((asset, index) => (
+      {museumAssets.map((asset) => (
         <ExhibitChapter
           key={asset.id}
           asset={asset}
-          index={index}
         />
       ))}
 

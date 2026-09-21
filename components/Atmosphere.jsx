@@ -1,57 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-
-const EXHIBIT_SOUNDS = {
-  1: {
-    file: '/sounds/riversound.mp3',
-    label: 'River Ambience',
-  },
-
-  2: {
-    file: '/sounds/kaziranga.wav',
-    label: 'Kaziranga Wilderness',
-  },
-
-  3: {
-    file: '/sounds/satriya.mp3',
-    label: 'Sattriya Atmosphere',
-  },
-
-  4: {
-    file: null,
-    label: 'Silent Exhibit',
-  },
-
-  5: {
-    file: null,
-    label: 'Silent Exhibit',
-  },
-
-  6: {
-    file: '/sounds/moonsoonCanopies.wav',
-    label: 'Rain and Thunder',
-  },
-
-  7: {
-    file: null,
-    label: 'Silent Exhibit',
-  },
-
-  8: {
-    file: '/sounds/Bihu.mp3',
-    label: 'Bihu Festivities',
-  },
-};
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from 'react';
+import { museumAudio } from '../data';
 
 export default function Atmosphere() {
   const canvasRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentExhibitId, setCurrentExhibitId] = useState(1);
   const [monsoonIntensity, setMonsoonIntensity] = useState(0.6);
 
   const audioRef = useRef(null);
-  const currentExhibitRef = useRef(1);
 
   /*
    * =========================================================
@@ -294,14 +258,12 @@ export default function Atmosphere() {
    * =========================================================
    */
 
-  const changeExhibitSound = async (
+  const changeExhibitSound = useEffectEvent(async (
     exhibitId
   ) => {
-    const sound =
-      EXHIBIT_SOUNDS[exhibitId];
+    const sound = museumAudio[exhibitId];
 
-    currentExhibitRef.current =
-      exhibitId;
+    setCurrentExhibitId(exhibitId);
 
     /*
      * If the visitor hasn't enabled
@@ -371,7 +333,7 @@ export default function Atmosphere() {
         error
       );
     }
-  };
+  });
 
   /*
    * =========================================================
@@ -406,6 +368,30 @@ export default function Atmosphere() {
     };
   }, [isPlaying]);
 
+  useEffect(() => {
+    const handleArtifactAudioStart = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+
+      setIsPlaying(false);
+    };
+
+    window.addEventListener(
+      'museum-artifact-audio-start',
+      handleArtifactAudioStart
+    );
+
+    return () => {
+      window.removeEventListener(
+        'museum-artifact-audio-start',
+        handleArtifactAudioStart
+      );
+    };
+  }, []);
+
   /*
    * =========================================================
    * 5. MAIN SOUND TOGGLE
@@ -418,11 +404,9 @@ export default function Atmosphere() {
      */
 
     if (!isPlaying) {
-      const exhibitId =
-        currentExhibitRef.current;
+      const exhibitId = currentExhibitId;
 
-      const sound =
-        EXHIBIT_SOUNDS[exhibitId];
+      const sound = museumAudio[exhibitId];
 
       /*
        * This exhibit intentionally
@@ -433,6 +417,10 @@ export default function Atmosphere() {
         setIsPlaying(true);
         return;
       }
+
+      window.dispatchEvent(
+        new CustomEvent('museum-ambient-audio-start')
+      );
 
       try {
         const audio =
@@ -516,10 +504,7 @@ export default function Atmosphere() {
    * =========================================================
    */
 
-  const currentSound =
-    EXHIBIT_SOUNDS[
-      currentExhibitRef.current
-    ];
+  const currentSound = museumAudio[currentExhibitId];
 
   return (
     <>

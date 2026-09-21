@@ -66,9 +66,9 @@ export default function TiltCard({ asset, index, total, onSelect }) {
 
       {/* Gallery Counter */}
       <div className="absolute top-20 left-20 text-gray-600 font-mono text-2xl tracking-widest hidden md:block">
-        0{index + 1}{' '}
+        {String(index + 1).padStart(2, '0')}{' '}
         <span className="text-gray-800">
-          / 0{total}
+          / {String(total).padStart(2, '0')}
         </span>
       </div>
 
@@ -168,13 +168,13 @@ export default function TiltCard({ asset, index, total, onSelect }) {
                 block
                 mb-1
               ">
-                {asset.category} // Click to Inspect 3D
+                {asset.category}{' // Click to Inspect 3D'}
               </span>
 
               <h3 className="
                 text-3xl
                 font-bold
-                text-white
+                !text-white
                 tracking-tight
               ">
                 {asset.title}

@@ -8,32 +8,7 @@ import {
 } from 'react';
 
 import gsap from 'gsap';
-
-const ARTIFACT_AUDIO = {
-  1: {
-    file: '/sounds/riversound.mp3',
-    label: 'River ambience',
-  },
-  2: {
-    file: '/sounds/kaziranga.wav',
-    label: 'Kaziranga wilderness',
-  },
-  3: {
-    file: '/sounds/satriya.mp3',
-    label: 'Sattriya atmosphere',
-  },
-  4: null,
-  5: null,
-  6: {
-    file: '/sounds/moonsoonCanopies.wav',
-    label: 'Rain and distant thunder',
-  },
-  7: null,
-  8: {
-    file: '/sounds/Bihu.mp3',
-    label: 'Bihu festivities',
-  },
-};
+import { museumAudio } from '../data';
 
 export default function ArtifactModal({
   asset,
@@ -48,6 +23,7 @@ export default function ArtifactModal({
   const scanLineRef = useRef(null);
   const hudRef = useRef(null);
   const metadataRef = useRef(null);
+  const handleCloseRef = useRef(() => {});
 
   const audioRef = useRef(null);
 
@@ -71,7 +47,8 @@ export default function ArtifactModal({
    * -------------------------------------------------------
    */
 
-  const handleMouseDown = (e) => {
+  const handlePointerDown = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
 
     setDragStart({
@@ -80,7 +57,7 @@ export default function ArtifactModal({
     });
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
     if (!isDragging) return;
 
     const deltaX = e.clientX - dragStart.x;
@@ -97,7 +74,11 @@ export default function ArtifactModal({
     });
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = (e) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+
     setIsDragging(false);
   };
 
@@ -112,7 +93,7 @@ export default function ArtifactModal({
 
     const handleEscape = (event) => {
       if (event.key === 'Escape' && !isClosing) {
-        handleClose();
+        handleCloseRef.current();
       }
     };
 
@@ -368,7 +349,7 @@ export default function ArtifactModal({
    * Each exhibit uses its own optional recording.
    */
 
-  const audioConfig = ARTIFACT_AUDIO[asset.id] ?? null;
+  const audioConfig = museumAudio[asset.id] ?? null;
 
   const toggleSoundbite = async () => {
     if (!audioConfig?.file) {
@@ -411,6 +392,10 @@ export default function ArtifactModal({
         audioRef.current = audio;
       }
 
+      window.dispatchEvent(
+        new CustomEvent('museum-artifact-audio-start')
+      );
+
       /*
        * PLAY
        */
@@ -423,6 +408,30 @@ export default function ArtifactModal({
       setIsPlayingAudio(false);
     }
   };
+
+  useEffect(() => {
+    const handleAmbientAudioStart = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+
+      setIsPlayingAudio(false);
+    };
+
+    window.addEventListener(
+      'museum-ambient-audio-start',
+      handleAmbientAudioStart
+    );
+
+    return () => {
+      window.removeEventListener(
+        'museum-ambient-audio-start',
+        handleAmbientAudioStart
+      );
+    };
+  }, []);
 
   /*
    * -------------------------------------------------------
@@ -562,6 +571,10 @@ export default function ArtifactModal({
       '-=0.2'
     );
   };
+
+  useEffect(() => {
+    handleCloseRef.current = handleClose;
+  });
 
   /*
    * -------------------------------------------------------
@@ -743,10 +756,6 @@ export default function ArtifactModal({
 
         <div
           ref={stageRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           className="
             relative
 
@@ -771,8 +780,14 @@ export default function ArtifactModal({
             cursor-grab
             active:cursor-grabbing
 
+            touch-none
+
             select-none
           "
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
 
           {/* =================================================
@@ -1006,8 +1021,11 @@ export default function ArtifactModal({
             className="
               relative
 
-              w-72
-              h-96
+                w-60
+                h-80
+
+                sm:w-64
+                sm:h-[22rem]
 
               md:w-80
               md:h-[28rem]
@@ -1157,9 +1175,10 @@ export default function ArtifactModal({
             lg:col-span-5
 
             flex
-            h-full
+            h-auto
+            lg:h-full
             flex-col
-            justify-between
+            justify-start
 
             space-y-6
           "
@@ -1394,7 +1413,7 @@ export default function ArtifactModal({
                     text-white
                   "
                 >
-                  Ambient Soundscape
+                  {audioConfig?.label || 'Ambient Soundscape'}
                 </h4>
 
                 <p
@@ -1407,7 +1426,11 @@ export default function ArtifactModal({
                     text-zinc-500
                   "
                 >
-                  {audioConfig?.label || 'No recording available'}
+                  {isPlayingAudio
+                    ? 'Playing now'
+                    : audioConfig?.file
+                      ? 'Ready to play'
+                      : 'No recording available'}
                 </p>
 
               </div>
@@ -1460,7 +1483,7 @@ export default function ArtifactModal({
               {audioConfig?.file
                 ? isPlayingAudio
                   ? 'Pause'
-                  : 'Play Audio'
+                  : `Play ${audioConfig.label}`
                 : 'Unavailable'}
             </button>
 
